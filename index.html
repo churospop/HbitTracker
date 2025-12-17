@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Habit Tracker</h1>
+        
+        <!-- 習慣追加セクション -->
+        <div class="add-habit-section">
+            <input type="text" id="habitInput" placeholder="">
+            <button id="addButton" class="add-btn">追加</button>
+        </div>
+        
+        <!-- 習慣リストセクション -->
+        <div class="habits-section">
+            <h2 class="habits-title">
+                <span class="file-icon">📋</span>
+                習慣リスト
+            </h2>
+            
+            <div class="habit-item">
+                <input type="checkbox" id="habit1" class="habit-checkbox">
+                <label for="habit1" class="habit-label">勉強</label>
+            </div>
+            
+            <div class="habit-item">
+                <input type="checkbox" id="habit2" class="habit-checkbox">
+                <label for="habit2" class="habit-label">運動</label>
+            </div>
+            
+            <div class="habit-item">
+                <input type="checkbox" id="habit3" class="habit-checkbox" checked>
+                <label for="habit3" class="habit-label">読書</label>
+            </div>
+        </div>
+        
+        <!-- 達成率セクション -->
+        <div class="achievement-section">
+            <p class="achievement-text">今日の達成率：1/3</p>
+        </div>
+    </div>
+</body>
+</html>
