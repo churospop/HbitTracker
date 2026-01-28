@@ -12,7 +12,8 @@
         
         <!-- 習慣追加セクション -->
         <div class="add-habit-section">
-            <input type="text" id="habitInput" placeholder="">
+            <input type="text" id="habitInput" placeholder="習慣名を入力">
+            <input type="time" id="habitTimeInput">
             <button id="addButton" class="add-btn">追加</button>
         </div>
         
@@ -30,10 +31,22 @@
         <div class="achievement-section">
             <p class="achievement-text">今日の達成率：1/3</p>
         </div>
+
+        <!-- 通知（リマインダー）セクション -->
+        <div class="reminder-section">
+            <h2 class="reminder-title">通知の設定</h2>
+            <div class="reminder-controls">
+                <input type="time" id="timeInput">
+                <input type="text" id="reminderLabel" placeholder="通知メッセージ（任意）">
+                <button id="setTimeButton" class="add-btn">設定</button>
+            </div>
+            <div id="remindersList" class="reminders-list"></div>
+        </div>
     </div>
     <script>
         (function(){
             const habitInput = document.getElementById('habitInput');
+            const habitTimeInput = document.getElementById('habitTimeInput');
             const addButton = document.getElementById('addButton');
             const habitsList = document.getElementById('habitsList');
             const achievementText = document.querySelector('.achievement-text');
@@ -45,7 +58,7 @@
                 achievementText.textContent = `今日の達成率：${done}/${total}`;
             }
 
-            function createHabitElement(title){
+            function createHabitElement(title, time){
                 const id = 'habit-' + Date.now() + Math.random().toString(36).slice(2,7);
                 const wrap = document.createElement('div');
                 wrap.className = 'habit-item';
@@ -61,6 +74,13 @@
                 label.className = 'habit-label';
                 label.textContent = title;
 
+                if(time){
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'habit-time';
+                    timeSpan.textContent = time;
+                    label.appendChild(timeSpan);
+                }
+
                 wrap.appendChild(checkbox);
                 wrap.appendChild(label);
                 return wrap;
@@ -69,11 +89,19 @@
             function addHabit(){
                 const title = habitInput.value.trim();
                 if(!title) return;
-                const el = createHabitElement(title);
+                const time = habitTimeInput.value || '';
+                const el = createHabitElement(title, time);
                 habitsList.appendChild(el);
                 habitInput.value = '';
+                habitTimeInput.value = '';
                 habitInput.focus();
                 updateAchievement();
+
+                if(time){
+                    // 追加時に通知権限を要求（ユーザー操作による要求）
+                    ensureNotificationPermission();
+                    addReminder(time, title);
+                }
             }
 
             addButton.addEventListener('click', addHabit);
@@ -81,6 +109,114 @@
 
             // 初期状態の更新（初期リストは空）
             updateAchievement();
+
+            // --- 通知（リマインダー）機能 ---
+            const timeInput = document.getElementById('timeInput');
+            const setTimeButton = document.getElementById('setTimeButton');
+            const remindersList = document.getElementById('remindersList');
+            const reminderLabel = document.getElementById('reminderLabel');
+
+            let reminders = [];
+
+            function saveReminders(){
+                localStorage.setItem('reminders', JSON.stringify(reminders));
+            }
+
+            function loadReminders(){
+                const raw = localStorage.getItem('reminders');
+                if(raw) reminders = JSON.parse(raw);
+                else reminders = [];
+            }
+
+            function renderReminders(){
+                remindersList.innerHTML = '';
+                reminders.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'reminder-item';
+                    div.textContent = `${r.time} — ${r.label || '通知'} `;
+                    const btn = document.createElement('button');
+                    btn.className = 'remove-btn';
+                    btn.textContent = '削除';
+                    btn.addEventListener('click', ()=>{ removeReminder(r.id); });
+                    div.appendChild(btn);
+                    remindersList.appendChild(div);
+                });
+            }
+
+            function addReminder(time, label){
+                const id = 'rem-' + Date.now() + Math.random().toString(36).slice(2,7);
+                reminders.push({ id, time, label: label || '', lastNotifiedDate: null });
+                saveReminders();
+                renderReminders();
+            }
+
+            function removeReminder(id){
+                reminders = reminders.filter(r=>r.id !== id);
+                saveReminders();
+                renderReminders();
+            }
+
+            function ensureNotificationPermission(){
+                if(!('Notification' in window)) return Promise.resolve(false);
+                if(Notification.permission === 'granted') return Promise.resolve(true);
+                if(Notification.permission === 'denied') return Promise.resolve(false);
+                return Notification.requestPermission().then(p => p === 'granted');
+            }
+
+            function showNotification(title, body){
+                if(!('Notification' in window)) return;
+                if(Notification.permission !== 'granted') return;
+                try{
+                    new Notification(title, { body });
+                }catch(e){
+                    console.error('通知エラー', e);
+                }
+            }
+
+            function checkReminders(){
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2,'0');
+                const mm = String(now.getMinutes()).padStart(2,'0');
+                const today = now.toISOString().slice(0,10);
+                const current = `${hh}:${mm}`;
+
+                reminders.forEach(r => {
+                    if(r.time === current && r.lastNotifiedDate !== today){
+                        ensureNotificationPermission().then(ok => {
+                            if(ok){
+                                showNotification('習慣のリマインダー', r.label || `時刻 ${r.time} です`);
+                                // 通知を実際に出した場合のみ最終通知日を更新
+                                r.lastNotifiedDate = today;
+                                saveReminders();
+                                renderReminders();
+                            } else {
+                                // 通知未許可の場合は更新しない（再試行できるようにする）
+                                console.log('通知未許可:', r.time, r.label);
+                            }
+                        }).catch(err => console.error('ensureNotificationPermission error', err));
+                    }
+                });
+            }
+
+            // 初期化
+            loadReminders();
+            renderReminders();
+
+            setTimeButton.addEventListener('click', function(){
+                const time = timeInput.value;
+                if(!time) return;
+                const label = reminderLabel.value.trim();
+                // 設定ボタン押下時に通知権限を明示的に要求
+                ensureNotificationPermission();
+                addReminder(time, label);
+                timeInput.value = '';
+                reminderLabel.value = '';
+            });
+
+            // 定期チェック（1分ごと） — 時刻は分単位で比較しているため60秒ごとで十分
+            checkReminders();
+            setInterval(checkReminders, 60000);
+
         })();
     </script>
 </body>

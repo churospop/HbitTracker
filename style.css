@@ -42,6 +42,14 @@ h1 {
     background-color: white;
 }
 
+#habitTimeInput {
+    padding: 6px 8px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+}
+
 .add-btn {
     padding: 8px 16px;
     background-color: #666;
@@ -101,6 +109,16 @@ h1 {
     font-size: 14px;
 }
 
+.habit-time {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 6px;
+    background: #f0f8ff;
+    border: 1px solid #4a90e2;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
 .habit-checkbox:checked + .habit-label {
     background-color: #d0d0d0;
 }
@@ -117,3 +135,53 @@ h1 {
     font-size: 14px;
     font-weight: normal;
 }
+
+/* 通知（リマインダー）セクション */
+.reminder-section {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 2px solid #333;
+}
+.reminder-title {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+.reminder-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+#timeInput {
+    padding: 6px 8px;
+    border: 2px solid #333;
+    border-radius: 4px;
+}
+#reminderLabel {
+    flex: 1;
+    padding: 6px 8px;
+    border: 2px solid #333;
+    border-radius: 4px;
+}
+.reminders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.reminder-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: #fff;
+    border: 2px solid #333;
+    border-radius: 6px;
+}
+.remove-btn {
+    background: #b33;
+    color: white;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.remove-btn:hover { background: #962; }
